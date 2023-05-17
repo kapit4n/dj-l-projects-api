@@ -29,6 +29,27 @@ class ProjectListApiView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class ProjectDetailApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self, project_id, user_id):
+        try:
+            return Project.objects.get(id=project_id, user=user_id)
+        except Project.DoesNotExist:
+            return None
+        
+    def get(self, request, project_id, *args, **kwargs):
+        project_instance = self.get_object(project_id, request.user.id)
+
+        if not project_instance:
+            return Response(
+                {"res": "project does not exist"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        serializer = ProjectSerializer(project_instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 # Create your views here.
 def index(request):
     return HttpResponse("Hello world from projects api")
